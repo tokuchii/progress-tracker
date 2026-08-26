@@ -1,0 +1,18 @@
+{
+  "error": true,
+  "url": "http://localhost:3000/api/auth/request-otp",
+  "statusCode": 400,
+  "statusMessage": "Bad Request",
+  "message": "Invalid JSON body",
+  "stack": [
+    "Invalid JSON body",
+    "at createError (C:/Users/kdrak/progress-tracker/node_modules/h3/dist/index.mjs:71:15)",
+    "at _parseJSON (C:/Users/kdrak/progress-tracker/node_modules/h3/dist/index.mjs:517:11)",
+    "at readBody (C:/Users/kdrak/progress-tracker/node_modules/h3/dist/index.mjs:443:14)",
+    "at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+    "at async Object.handler (C:\\Users\\kdrak\\progress-tracker\\server\\api\\auth\\request-otp.post.ts:7:0)",
+    "at async file:///C:/Users/kdrak/progress-tracker/node_modules/h3/dist/index.mjs:2017:19)",
+    "at async Object.callAsync (C:/Users/kdrak/progress-tracker/node_modules/unctx/dist/index.mjs:71:12)",
+    "at async Server.toNodeHandle (C:/Users/kdrak/progress-tracker/node_modules/h3/dist/index.mjs:2316:7)"
+  ]
+}
