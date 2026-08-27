@@ -3,6 +3,7 @@ import type { H3Event } from 'h3'
 
 const COOKIE = 'la_session'
 const INACTIVITY_MS = 30 * 60 * 1000
+const ACTIVITY_FLUSH_MS = 5 * 60 * 1000
 
 export interface SessionUser {
   name: string
@@ -11,6 +12,7 @@ export interface SessionUser {
 
 export interface SessionRecord extends SessionUser {
   lastActiveAt: number
+  remember: boolean
 }
 
 export async function getSessionUser(event: H3Event) {
@@ -23,13 +25,15 @@ export async function getSessionUser(event: H3Event) {
   if (!record) {
     return null
   }
-  if (Date.now() - record.lastActiveAt > INACTIVITY_MS) {
+  const idle = Date.now() - record.lastActiveAt
+  if (!record.remember && idle > INACTIVITY_MS) {
     await useStorage('data').removeItem(key)
     return null
   }
-  await useStorage('data').setItem(key, { ...record, lastActiveAt: Date.now() })
-  const { lastActiveAt, ...user } = record
-  return user
+  if (idle > ACTIVITY_FLUSH_MS) {
+    await useStorage('data').setItem(key, { ...record, lastActiveAt: Date.now() })
+  }
+  return { name: record.name, email: record.email }
 }
 
 export async function requireSessionUser(event: H3Event) {
@@ -42,7 +46,7 @@ export async function requireSessionUser(event: H3Event) {
 
 export async function createSession(event: H3Event, user: SessionUser, remember = false) {
   const token = randomUUID()
-  await useStorage('data').setItem(`sessions/${token}`, { ...user, lastActiveAt: Date.now() } satisfies SessionRecord)
+  await useStorage('data').setItem(`sessions/${token}`, { ...user, remember, lastActiveAt: Date.now() } satisfies SessionRecord)
   setCookie(event, COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',

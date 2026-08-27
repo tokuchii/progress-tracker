@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { allSessions, bootcampSections, totalXp, type AssignedMember, type BootcampSection, type BootcampSession, type Member, type MemberStat } from '#shared/sessions'
+import AppNotepadEditor from '~/components/AppNotepadEditor.vue'
+import { exportQuestionsPdf } from '~/utils/notepad'
 
 const { notify } = useNotify()
 
@@ -93,6 +95,11 @@ const initials = computed(() => initialsOf(user.value?.name ?? ''))
 const { data: notepadData } = await useFetch<{ text: string }>('/api/notepad')
 const notepadHtml = ref<string>(notepadData.value?.text ?? '')
 const lastSaved = ref<Date | null>(null)
+const notepadEditor = ref<InstanceType<typeof AppNotepadEditor>>()
+
+function askMember(member: Member) {
+  notepadEditor.value?.insertMemberQuestion(member.name)
+}
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined
 
@@ -110,155 +117,8 @@ watch(notepadHtml, (value) => {
   }, 800)
 })
 
-interface NotepadRun {
-  text: string
-  bold: boolean
-  italic: boolean
-  underline: boolean
-  background?: string
-  color?: string
-}
-
-function collectRuns(root: Node): NotepadRun[] {
-  const runs: NotepadRun[] = []
-  const walk = (node: Node, bold: boolean, italic: boolean, underline: boolean, background?: string, color?: string) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const text = node.textContent ?? ''
-      if (text) {
-        runs.push({ text, bold, italic, underline, background, color })
-      }
-      return
-    }
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      return
-    }
-    const el = node as HTMLElement
-    for (const child of Array.from(el.childNodes)) {
-      walk(
-        child,
-        bold || el.tagName === 'STRONG' || el.tagName === 'B',
-        italic || el.tagName === 'EM' || el.tagName === 'I',
-        underline || el.tagName === 'U',
-        el.style.backgroundColor || background,
-        el.style.color || color
-      )
-    }
-  }
-  walk(root, false, false, false, undefined, undefined)
-  return runs
-}
-
 async function exportPdf() {
-  const { jsPDF } = await import('jspdf')
-  const doc = new jsPDF()
-  const margin = 15
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const maxWidth = pageWidth - margin * 2
-  const fontSize = 11
-  const lineHeight = 6.5
-
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(30, 30, 30)
-  doc.text('Odoo Bootcamp Tracker — Questions', margin, 18)
-  doc.setFontSize(fontSize)
-
-  const container = document.createElement('div')
-  container.innerHTML = notepadHtml.value || ''
-  const blocks = Array.from(container.querySelectorAll('p, li')) as HTMLElement[]
-
-  const fontKey = (run: NotepadRun) => run.bold && run.italic ? 'bolditalic' : run.bold ? 'bold' : run.italic ? 'italic' : 'normal'
-  const measure = (run: NotepadRun, text: string) => {
-    doc.setFont('helvetica', fontKey(run))
-    return doc.getTextWidth(text)
-  }
-
-  let y = 28
-  let orderedIndex = 0
-  let drewAny = false
-
-  for (const block of blocks) {
-    const runs = collectRuns(block)
-    if (!(block.textContent ?? '').trim()) {
-      continue
-    }
-    drewAny = true
-
-    let prefix = ''
-    if (block.tagName === 'LI') {
-      const listType = block.dataset.list || (block.parentElement?.tagName === 'OL' ? 'ordered' : 'bullet')
-      prefix = listType === 'ordered' ? `${++orderedIndex}. ` : '\u2022 '
-    } else {
-      orderedIndex = 0
-    }
-
-    type Token = { text: string, run: NotepadRun }
-    const tokens: Token[] = []
-    for (const run of runs) {
-      for (const word of run.text.match(/\S+\s*/g) ?? []) {
-        tokens.push({ text: word, run })
-      }
-    }
-
-    const lines: Token[][] = [[]]
-    doc.setFont('helvetica', 'normal')
-    let lineWidth = prefix ? doc.getTextWidth(prefix) : 0
-    for (const token of tokens) {
-      const width = measure(token.run, token.text)
-      const last = lines[lines.length - 1]!
-      if (lineWidth + width > maxWidth && last.length > 0) {
-        lines.push([])
-        lineWidth = 0
-      }
-      lines[lines.length - 1]!.push(token)
-      lineWidth += width
-    }
-
-    for (const line of lines) {
-      if (y > pageHeight - margin) {
-        doc.addPage()
-        y = margin + 4
-      }
-      let x = margin
-      if (line === lines[0] && prefix) {
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(60, 60, 60)
-        doc.text(prefix, x, y)
-        x += doc.getTextWidth(prefix)
-      }
-      for (const token of line) {
-        const width = measure(token.run, token.text)
-        if (token.run.background) {
-          const bg = token.run.background.match(/\d+/g)?.map(Number) ?? []
-          if (bg.length === 3) {
-            doc.setFillColor(bg[0]!, bg[1]!, bg[2]!)
-            doc.rect(x, y - fontSize * 0.85, width, fontSize * 1.2, 'F')
-          }
-        }
-        const fg = token.run.color?.match(/\d+/g)?.map(Number) ?? []
-        doc.setTextColor(fg.length === 3 ? fg[0]! : 30, fg.length === 3 ? fg[1]! : 30, fg.length === 3 ? fg[2]! : 30)
-        doc.setFont('helvetica', fontKey(token.run))
-        doc.text(token.text, x, y)
-        if (token.run.underline) {
-          const underlineColor = fg.length === 3 ? fg : [30, 30, 30]
-          doc.setDrawColor(underlineColor[0]!, underlineColor[1]!, underlineColor[2]!)
-          doc.line(x, y + 1.5, x + width, y + 1.5)
-        }
-        x += width
-      }
-      y += lineHeight
-    }
-    y += 2
-  }
-
-  if (!drewAny) {
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(30, 30, 30)
-    doc.text('No questions yet.', margin, 28)
-  }
-
-  doc.save('bootcamp-questions.pdf')
+  await exportQuestionsPdf(notepadHtml.value || '')
 }
 
 async function exportExcel() {
@@ -728,7 +588,26 @@ async function signOut() {
             <p class="text-sm font-medium text-(--ui-text-muted)">
               Asked Questions
             </p>
+            <div
+              v-if="members.length"
+              class="mt-3 flex flex-wrap gap-1.5"
+            >
+              <button
+                v-for="member in members"
+                :key="member.email"
+                type="button"
+                class="rounded-full border border-(--ui-border) bg-(--ui-bg-elevated)/60 px-3 py-1 text-xs font-medium text-(--ui-text-highlighted) transition-colors hover:border-(--ui-primary) hover:bg-(--ui-primary)/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--ui-primary)"
+                :title="`Start a question from ${member.name}`"
+                @click="askMember(member)"
+              >
+                {{ member.name }}
+              </button>
+            </div>
+            <p class="mt-2 text-xs text-(--ui-text-muted)">
+              Click a member to start their question.
+            </p>
             <AppNotepadEditor
+              ref="notepadEditor"
               v-model="notepadHtml"
               class="mt-3"
               placeholder="Paste member questions here…"

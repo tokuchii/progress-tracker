@@ -1,6 +1,6 @@
 import { findSession, type Member } from '../../../shared/sessions'
 import { requireSessionUser } from '../../utils/session'
-import { readAssignments, withCompletion } from '../../utils/assignments'
+import { listUsers, readAssignments, withCompletion } from '../../utils/assignments'
 
 export default defineEventHandler(async (event) => {
   await requireSessionUser(event)
@@ -13,18 +13,23 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 422, statusMessage: 'Unknown session.' })
   }
 
+  const registered = await listUsers()
   const seen = new Set<string>()
   const members: Member[] = []
   for (const entry of raw) {
-    if (typeof entry?.email !== 'string' || typeof entry?.name !== 'string') {
+    if (typeof entry?.email !== 'string') {
       continue
     }
     const email = entry.email.trim().toLowerCase()
     if (!email || seen.has(email)) {
       continue
     }
+    const member = registered.find(user => user.email === email)
+    if (!member) {
+      continue
+    }
     seen.add(email)
-    members.push({ email, name: entry.name })
+    members.push({ email, name: member.name })
   }
 
   const assignments = await readAssignments()

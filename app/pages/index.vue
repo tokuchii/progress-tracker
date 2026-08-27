@@ -11,10 +11,19 @@ function savedLogin() {
   }
 }
 
-const saved = savedLogin()
-const name = ref<string>(saved?.name ?? '')
-const email = ref<string>(saved?.email ?? '')
+const name = ref('')
+const email = ref('')
 const remember = ref(true)
+
+onMounted(() => {
+  const saved = savedLogin()
+  if (saved?.name) {
+    name.value = saved.name
+  }
+  if (saved?.email) {
+    email.value = saved.email
+  }
+})
 const loading = ref(false)
 const { notify } = useNotify()
 
