@@ -123,7 +123,7 @@ async function signIn() {
             @submit.prevent="signIn"
           >
             <UFormField
-              label="Full name"
+              label="Display name"
               required
             >
               <UInput
@@ -136,8 +136,7 @@ async function signIn() {
             </UFormField>
 
             <UFormField
-              label="Work email"
-              description="Admin accounts only."
+              label="Leads email"
               required
             >
               <UInput
