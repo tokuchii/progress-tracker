@@ -2,18 +2,34 @@ import { randomUUID } from 'node:crypto'
 import type { H3Event } from 'h3'
 
 const COOKIE = 'la_session'
+const INACTIVITY_MS = 30 * 60 * 1000
 
 export interface SessionUser {
   name: string
   email: string
 }
 
-export function getSessionUser(event: H3Event) {
+export interface SessionRecord extends SessionUser {
+  lastActiveAt: number
+}
+
+export async function getSessionUser(event: H3Event) {
   const token = getCookie(event, COOKIE)
   if (!token) {
     return null
   }
-  return useStorage('data').getItem<SessionUser>(`sessions/${token}`)
+  const key = `sessions/${token}`
+  const record = await useStorage('data').getItem<SessionRecord>(key)
+  if (!record) {
+    return null
+  }
+  if (Date.now() - record.lastActiveAt > INACTIVITY_MS) {
+    await useStorage('data').removeItem(key)
+    return null
+  }
+  await useStorage('data').setItem(key, { ...record, lastActiveAt: Date.now() })
+  const { lastActiveAt, ...user } = record
+  return user
 }
 
 export async function requireSessionUser(event: H3Event) {
@@ -24,14 +40,14 @@ export async function requireSessionUser(event: H3Event) {
   return user
 }
 
-export async function createSession(event: H3Event, user: SessionUser) {
+export async function createSession(event: H3Event, user: SessionUser, remember = false) {
   const token = randomUUID()
-  await useStorage('data').setItem(`sessions/${token}`, user)
+  await useStorage('data').setItem(`sessions/${token}`, { ...user, lastActiveAt: Date.now() } satisfies SessionRecord)
   setCookie(event, COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: !import.meta.dev,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: remember ? 30 * 24 * 60 * 60 : undefined,
     path: '/'
   })
 }

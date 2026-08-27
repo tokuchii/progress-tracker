@@ -3,7 +3,6 @@ export interface BootcampSession {
   number: number
   title: string
   xp?: number
-  uploadLabel?: string
 }
 
 export interface BootcampSection {
@@ -13,11 +12,18 @@ export interface BootcampSection {
   sessions: BootcampSession[]
 }
 
-export interface UploadMeta {
+export interface Member {
   name: string
-  size: number
-  mime: string
-  uploadedAt: number
+  email: string
+}
+
+export interface AssignedMember extends Member {
+  completed: boolean
+}
+
+export interface MemberStat extends Member {
+  done: number
+  total: number
 }
 
 export const bootcampSections: BootcampSection[] = [
@@ -27,13 +33,13 @@ export const bootcampSections: BootcampSection[] = [
     duration: '22h 30m',
     sessions: [
       { id: 's1', number: 1, title: 'Quiz: CRM, Sales, Invoicing', xp: 300 },
-      { id: 's2', number: 2, title: 'Use case: CityBike', uploadLabel: 'Submit your CityBike output' },
+      { id: 's2', number: 2, title: 'Use case: CityBike' },
       { id: 's3', number: 3, title: 'Quiz: Project & Timesheet', xp: 300 },
-      { id: 's4', number: 4, title: 'Use case: CityBike', uploadLabel: 'Submit your CityBike output' },
+      { id: 's4', number: 4, title: 'Use case: CityBike' },
       { id: 's5', number: 5, title: 'Quiz: Purchase, Inventory & Manufacturing', xp: 300 },
-      { id: 's6', number: 6, title: 'Use case: CityBike', uploadLabel: 'Submit your CityBike output' },
+      { id: 's6', number: 6, title: 'Use case: CityBike' },
       { id: 's7', number: 7, title: 'Quiz: Accounting', xp: 300 },
-      { id: 's8', number: 8, title: 'Use case: CityBike', uploadLabel: 'Submit your CityBike output' }
+      { id: 's8', number: 8, title: 'Use case: CityBike' }
     ]
   },
   {
@@ -43,11 +49,11 @@ export const bootcampSections: BootcampSection[] = [
     sessions: [
       { id: 's9', number: 9, title: 'Project Life Cycle & Introduction to OIM' },
       { id: 's10', number: 10, title: 'Kick Off: Project Alignment & Business Analysis' },
-      { id: 's11', number: 11, title: 'Droneland: Kick Off', uploadLabel: 'Submit your Droneland kick-off' },
+      { id: 's11', number: 11, title: 'Droneland: Kick Off' },
       { id: 's12', number: 12, title: 'Project Roadmap' },
-      { id: 's13', number: 13, title: 'Droneland: Roadmap', uploadLabel: 'Submit your roadmap' },
-      { id: 's14', number: 14, title: 'Droneland: MVP1', uploadLabel: 'Submit your MVP1' },
-      { id: 's15', number: 15, title: 'Droneland: Challenge the Customer & Progress Report', uploadLabel: 'Submit your progress report' }
+      { id: 's13', number: 13, title: 'Droneland: Roadmap' },
+      { id: 's14', number: 14, title: 'Droneland: MVP1' },
+      { id: 's15', number: 15, title: 'Droneland: Challenge the Customer & Progress Report' }
     ]
   },
   {
@@ -59,11 +65,11 @@ export const bootcampSections: BootcampSection[] = [
       { id: 's17', number: 17, title: 'Create an App from Scratch' },
       { id: 's18', number: 18, title: 'Odoo Transversal Knowledge' },
       { id: 's19', number: 19, title: 'Development & Odoo SH' },
-      { id: 's20', number: 20, title: 'Writing Specifications', uploadLabel: 'Submit your specifications' },
+      { id: 's20', number: 20, title: 'Writing Specifications' },
       { id: 's21', number: 21, title: 'Basic Data Import' },
       { id: 's22', number: 22, title: 'Advanced Data Import' },
       { id: 's23', number: 23, title: 'Reporting, Spreadsheet & Dashboard' },
-      { id: 's24', number: 24, title: 'Reporting, Spreadsheet & Dashboard: Use Cases', uploadLabel: 'Submit your reporting use case' },
+      { id: 's24', number: 24, title: 'Reporting, Spreadsheet & Dashboard: Use Cases' },
       { id: 's25', number: 25, title: 'The Presales Process & the (R)OI' }
     ]
   },
@@ -73,7 +79,7 @@ export const bootcampSections: BootcampSection[] = [
     duration: '3h 30m',
     sessions: [
       { id: 's26', number: 26, title: 'Mind Maps, PKB, Documentation & Forum' },
-      { id: 's27', number: 27, title: 'Use case 4: POS', uploadLabel: 'Submit your POS use case' }
+      { id: 's27', number: 27, title: 'Use case 4: POS' }
     ]
   }
 ]

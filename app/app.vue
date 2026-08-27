@@ -11,8 +11,8 @@ useHead({
   }
 })
 
-const title = 'LeadsAgri Partner Bootcamp'
-const description = 'Track your Odoo Partner Bootcamp progress — sessions, quizzes and deliverables in one place.'
+const title = 'Odoo Bootcamp Tracker'
+const description = 'Track your Odoo Partner Bootcamp progress — sessions and quizzes in one place.'
 
 useSeoMeta({
   title,
@@ -25,5 +25,6 @@ useSeoMeta({
 <template>
   <UApp>
     <NuxtPage />
+    <AppNotification />
   </UApp>
 </template>

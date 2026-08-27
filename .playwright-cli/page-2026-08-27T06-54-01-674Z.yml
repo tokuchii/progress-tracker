@@ -1,0 +1,49 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Odoo Bootcamp Tracker
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Odoo Partner Onboarding
+          - heading "Become an Odoo implementation star, one session at a time." [level=1] [ref=e12]
+          - paragraph [ref=e13]: The complete Partner Bootcamp — 27 sessions across 4 tracks — with live progress tracking in one place.
+          - generic [ref=e14]:
+            - generic [ref=e15]:
+              - term [ref=e16]: Sessions
+              - definition [ref=e17]: "27"
+            - generic [ref=e18]:
+              - term [ref=e19]: Total time
+              - definition [ref=e20]: 2d 11h
+            - generic [ref=e21]:
+              - term [ref=e22]: Quizzes
+              - definition [ref=e23]: 1,200 XP
+        - paragraph [ref=e24]: Functional · Methodology · Technico-functional · Going further
+      - generic [ref=e26]:
+        - generic [ref=e28]:
+          - heading "Welcome to the Bootcamp" [level=2] [ref=e29]
+          - paragraph [ref=e30]: Enter your name and admin email to continue.
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - generic [ref=e33]: Full name*
+              - textbox "Full name*" [ref=e38]:
+                - /placeholder: Juan Dela Cruz
+                - text: Smoke Admin
+            - generic [ref=e39]:
+              - generic [ref=e40]:
+                - generic [ref=e41]: Work email*
+                - paragraph [ref=e43]: Admin accounts only.
+              - textbox "Work email*" [ref=e46]:
+                - /placeholder: name@leadsagri.com
+                - text: kmacabos@leadsagri.com
+            - generic [ref=e47]:
+              - checkbox "Remember this device" [checked] [ref=e49]
+              - generic [ref=e50]: Remember this device
+            - button "Sign in" [disabled] [ref=e52]
+        - paragraph [ref=e53]: Odoo Bootcamp Tracker
+    - button "Welcome, Smoke Admin" [ref=e69]
+  - region "Notifications (F8)":
+    - list
+  - generic [ref=e54]:
+    - button "Toggle Nuxt DevTools" [ref=e55] [cursor=pointer]
+    - generic "Page load time" [ref=e59]: "-"
+    - button "Toggle Component Inspector" [ref=e63] [cursor=pointer]

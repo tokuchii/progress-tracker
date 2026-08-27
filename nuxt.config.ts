@@ -11,17 +11,6 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  runtimeConfig: {
-    smtp: {
-      host: '',
-      port: 587,
-      secure: false,
-      user: '',
-      pass: '',
-      from: ''
-    }
-  },
-
   compatibilityDate: '2026-06-30',
 
   nitro: {

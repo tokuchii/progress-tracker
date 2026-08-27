@@ -1,87 +1,55 @@
 <script setup lang="ts">
-const step = ref<'form' | 'otp'>('form')
-const name = ref('')
-const email = ref('')
-const code = ref<string[]>([])
-const error = ref('')
-const loading = ref(false)
-const devCode = ref<string | undefined>()
-const resendIn = ref(0)
-let resendTimer: ReturnType<typeof setInterval> | undefined
-
-onBeforeUnmount(() => {
-  if (resendTimer) {
-    clearInterval(resendTimer)
+function savedLogin() {
+  if (!import.meta.client) {
+    return null
   }
-})
+  try {
+    const raw = localStorage.getItem('la_login')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const saved = savedLogin()
+const name = ref<string>(saved?.name ?? '')
+const email = ref<string>(saved?.email ?? '')
+const remember = ref(true)
+const loading = ref(false)
+const { notify } = useNotify()
 
 const { data: session } = await useFetch('/api/auth/session')
 if (session.value?.user) {
   await navigateTo('/dashboard', { replace: true })
 }
 
-async function requestCode() {
+async function signIn() {
   if (loading.value) {
     return
   }
   loading.value = true
-  error.value = ''
-  devCode.value = undefined
   try {
-    const res = await $fetch<{ ok: boolean, devCode?: string }>('/api/auth/request-otp', {
+    await $fetch('/api/auth/login', {
       method: 'POST',
-      body: { name: name.value, email: email.value }
+      body: { name: name.value, email: email.value, remember: remember.value }
     })
-    devCode.value = res.devCode
-    code.value = []
-    step.value = 'otp'
-    resendIn.value = 30
-    resendTimer = setInterval(() => {
-      resendIn.value -= 1
-      if (resendIn.value <= 0 && resendTimer) {
-        clearInterval(resendTimer)
-      }
-    }, 1000)
-  } catch (err) {
-    error.value = errorMessage(err)
-  } finally {
-    loading.value = false
-  }
-}
-
-async function verifyCode() {
-  if (loading.value || code.value.length !== 6) {
-    return
-  }
-  loading.value = true
-  error.value = ''
-  try {
-    await $fetch('/api/auth/verify-otp', {
-      method: 'POST',
-      body: { email: email.value, code: code.value.join('') }
-    })
+    if (remember.value) {
+      localStorage.setItem('la_login', JSON.stringify({ name: name.value, email: email.value }))
+    } else {
+      localStorage.removeItem('la_login')
+    }
+    notify({ title: `Welcome, ${name.value}`, color: 'success' })
     await navigateTo('/dashboard')
   } catch (err) {
-    error.value = errorMessage(err)
-    code.value = []
+    notify({ title: errorMessage(err), color: 'error' })
   } finally {
     loading.value = false
-  }
-}
-
-function backToForm() {
-  step.value = 'form'
-  error.value = ''
-  code.value = []
-  if (resendTimer) {
-    clearInterval(resendTimer)
-    resendIn.value = 0
   }
 }
 </script>
 
 <template>
-  <div class="min-h-dvh lg:grid lg:grid-cols-2">
+  <div class="dot-surface min-h-dvh lg:grid lg:grid-cols-2">
     <!-- Brand panel -->
     <div class="relative hidden flex-col justify-between overflow-hidden border-r border-(--ui-border) bg-(--ui-bg-elevated) p-10 lg:flex">
       <div class="pointer-events-none absolute -top-40 -left-40 size-[28rem] rounded-full bg-(--ui-primary)/15 blur-3xl" />
@@ -96,10 +64,10 @@ function backToForm() {
           Odoo Partner Onboarding
         </p>
         <h1 class="text-4xl font-bold tracking-tight text-balance text-(--ui-text-highlighted)">
-          Become an Odoo implementation star, one session at a time.
+          Become an Odoo <span class="bg-gradient-to-r from-(--ui-primary) to-emerald-400 bg-clip-text text-transparent">implementation star</span>, one session at a time.
         </h1>
         <p class="mt-4 leading-relaxed text-(--ui-text-muted)">
-          The complete Partner Bootcamp — 27 sessions across 4 tracks — with live progress tracking and your deliverables in one place.
+          The complete Partner Bootcamp — 27 sessions across 4 tracks — with live progress tracking in one place.
         </p>
 
         <dl class="mt-8 grid grid-cols-3 gap-6 border-t border-(--ui-border) pt-6">
@@ -143,144 +111,62 @@ function backToForm() {
         </div>
 
         <UCard>
-          <template v-if="step === 'form'">
-            <h2 class="text-xl font-semibold tracking-tight text-(--ui-text-highlighted)">
-              Welcome to the Bootcamp
-            </h2>
-            <p class="mt-1 text-sm text-(--ui-text-muted)">
-              Enter your details and we will email you a one-time code to verify it is you.
-            </p>
+          <h2 class="text-xl font-semibold tracking-tight text-(--ui-text-highlighted)">
+            Welcome to the Bootcamp
+          </h2>
+          <p class="mt-1 text-sm text-(--ui-text-muted)">
+            Enter your name and admin email to continue.
+          </p>
 
-            <form
-              class="mt-6 space-y-4"
-              @submit.prevent="requestCode"
+          <form
+            class="mt-6 space-y-4"
+            @submit.prevent="signIn"
+          >
+            <UFormField
+              label="Full name"
+              required
             >
-              <UFormField
-                label="Full name"
-                required
-              >
-                <UInput
-                  v-model="name"
-                  size="xl"
-                  placeholder="Juan Dela Cruz"
-                  autocomplete="name"
-                  :autofocus="true"
-                />
-              </UFormField>
-
-              <UFormField
-                label="Work email"
-                description="Must be a @leadsagri.com address."
-                required
-              >
-                <UInput
-                  v-model="email"
-                  type="email"
-                  size="xl"
-                  placeholder="juan@leadsagri.com"
-                  autocomplete="email"
-                />
-              </UFormField>
-
-              <UAlert
-                v-if="error"
-                :title="error"
-                color="error"
-                variant="subtle"
-                icon="i-lucide-circle-alert"
-              />
-
-              <UButton
-                type="submit"
-                block
+              <UInput
+                v-model="name"
                 size="xl"
-                :loading="loading"
-              >
-                Send verification code
-              </UButton>
-            </form>
-          </template>
-
-          <template v-else>
-            <div class="flex items-start justify-between">
-              <div>
-                <h2 class="text-xl font-semibold tracking-tight text-(--ui-text-highlighted)">
-                  Check your inbox
-                </h2>
-                <p class="mt-1 text-sm text-(--ui-text-muted)">
-                  We sent a 6-digit code to
-                  <span class="font-medium text-(--ui-text-highlighted)">{{ email }}</span>.
-                  It expires in 5 minutes.
-                </p>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-center">
-              <UPinInput
-                v-model="code"
-                :length="6"
-                otp
-                size="xl"
+                placeholder="Juan Dela Cruz"
+                autocomplete="name"
                 :autofocus="true"
-                :disabled="loading"
-                @complete="verifyCode"
               />
-            </div>
+            </UFormField>
 
-            <UAlert
-              v-if="error"
-              :title="error"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-circle-alert"
-              class="mt-4"
-            />
+            <UFormField
+              label="Work email"
+              description="Admin accounts only."
+              required
+            >
+              <UInput
+                v-model="email"
+                type="email"
+                size="xl"
+                placeholder="name@leadsagri.com"
+                autocomplete="email"
+              />
+            </UFormField>
 
-            <UAlert
-              v-if="devCode"
-              title="Dev mode"
-              :description="`No SMTP configured, so the code was not emailed. Your code is ${devCode}.`"
-              color="info"
-              variant="subtle"
-              icon="i-lucide-flask-conical"
-              class="mt-4"
+            <UCheckbox
+              v-model="remember"
+              label="Remember this device"
             />
 
             <UButton
+              type="submit"
               block
               size="xl"
-              class="mt-6"
               :loading="loading"
-              :disabled="code.length !== 6"
-              @click="verifyCode"
             >
-              Verify code
+              Sign in
             </UButton>
-
-            <div class="mt-5 flex items-center justify-between text-sm">
-              <UButton
-                variant="link"
-                color="neutral"
-                size="sm"
-                :disabled="resendIn > 0"
-                @click="requestCode"
-              >
-                Resend code{{ resendIn > 0 ? ` in ${resendIn}s` : '' }}
-              </UButton>
-              <UButton
-                variant="link"
-                color="neutral"
-                size="sm"
-                @click="backToForm"
-              >
-                Change email
-              </UButton>
-            </div>
-          </template>
+          </form>
         </UCard>
 
         <p class="mt-5 text-center text-xs text-(--ui-text-muted)">
-          LeadsAgri · Odoo Partner Bootcamp Tracker
+          Odoo Bootcamp Tracker
         </p>
       </div>
     </div>

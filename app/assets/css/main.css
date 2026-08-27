@@ -17,3 +17,99 @@
   --color-green-900: #0A5331;
   --color-green-950: #052E16;
 }
+
+:root {
+  --color-member-1: #00C16A;
+  --color-member-2: #14B8A6;
+  --color-member-3: #0EA5E9;
+  --color-member-4: #6366F1;
+  --color-member-5: #8B5CF6;
+  --color-member-6: #D946EF;
+  --color-member-7: #F43F5E;
+  --color-member-8: #F97316;
+  --color-member-9: #F59E0B;
+  --color-member-10: #A1A1AA;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  *,
+  ::before,
+  ::after {
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      fill 0.3s ease,
+      stroke 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  html {
+    transition: color-scheme 0.3s ease;
+  }
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
+@utility dot-surface {
+  background-image: radial-gradient(circle, var(--ui-border) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+.notepad-editor .ql-toolbar.ql-snow {
+  border-color: var(--ui-border);
+  background: var(--ui-bg-elevated);
+}
+
+.notepad-editor .ql-container.ql-snow {
+  min-height: 320px;
+  border-color: var(--ui-border);
+  background: var(--ui-bg);
+  color: var(--ui-text-highlighted);
+  font-family: inherit;
+}
+
+.notepad-editor .ql-editor {
+  font-size: 14px;
+  line-height: 28px;
+}
+
+.notepad-editor .ql-editor.ql-blank::before {
+  color: var(--ui-text-muted);
+  font-style: normal;
+}
+
+.notepad-editor .ql-snow .ql-stroke {
+  stroke: var(--ui-text-muted);
+}
+
+.notepad-editor .ql-snow .ql-fill {
+  fill: var(--ui-text-muted);
+}
+
+.notepad-editor .ql-snow .ql-picker {
+  color: var(--ui-text-muted);
+}
+
+.notepad-editor .ql-snow .ql-picker-options {
+  background: var(--ui-bg-elevated);
+  border-color: var(--ui-border);
+}
+
+.notepad-editor .ql-snow.ql-toolbar button:hover .ql-stroke,
+.notepad-editor .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+  stroke: var(--ui-primary);
+}
+
+.notepad-editor .ql-snow.ql-toolbar button:hover .ql-fill,
+.notepad-editor .ql-snow.ql-toolbar button.ql-active .ql-fill {
+  fill: var(--ui-primary);
+}

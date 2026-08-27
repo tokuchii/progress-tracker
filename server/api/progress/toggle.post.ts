@@ -1,6 +1,6 @@
 import { findSession } from '../../../shared/sessions'
 import { requireSessionUser } from '../../utils/session'
-import { progressKey, readProgress } from '../../utils/progress'
+import { setCompleted } from '../../utils/progress'
 
 export default defineEventHandler(async (event) => {
   const user = await requireSessionUser(event)
@@ -12,15 +12,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 422, statusMessage: 'Unknown session.' })
   }
 
-  const progress = await readProgress(user.email)
-  const set = new Set(progress.completed)
-  if (completed) {
-    set.add(sessionId)
-  } else {
-    set.delete(sessionId)
-  }
-  progress.completed = [...set]
-  await useStorage('data').setItem(progressKey(user.email), progress)
-
+  const progress = await setCompleted(user.email, sessionId, completed)
   return { completed: progress.completed }
 })
