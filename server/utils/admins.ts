@@ -1,7 +1,8 @@
 export const ADMIN_EMAILS = [
-  'marcelus@blueframeph.com',
   'kmacabos@leadsagri.com',
-  'aaraza@leadsagri.com'
+  'marcelus@leadsagri.com',
+  'arnan@leadsagri.com',
+  'rtaleon@leadsagri.com'
 ]
 
 export function isAdmin(email: string) {

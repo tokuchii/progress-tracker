@@ -5,8 +5,8 @@ A Nuxt 4 + Nuxt UI application that tracks a partner's progress through the
 
 ## Flow
 
-1. Only **admin accounts** sign in: `marcelus@blueframeph.com`,
-   `kmacabos@leadsagri.com`, `aaraza@leadsagri.com`.
+1. Only **admin accounts** sign in: `kmacabos@leadsagri.com`,
+   `marcelus@leadsagri.com`, `arnan@leadsagri.com`, `rtaleon@leadsagri.com`.
 2. Enter your name and admin email on the sign-in page. Check
    **Remember this device** to stay signed in for 30 days; otherwise the
    session ends when the browser closes.
