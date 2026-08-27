@@ -14,6 +14,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@iconify-json/lucide": "^1.2.125",
     "@nuxt/ui": "^4.11.0",
+    "@vercel/kv": "^3.0.0",
     "jspdf": "^4.2.1",
     "nuxt": "^4.5.2",
     "quill": "^2.0.3",

@@ -15,7 +15,9 @@ export default defineNuxtConfig({
 
   nitro: {
     storage: {
-      data: { driver: 'fs', base: './.data' }
+      data: process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
+        ? { driver: 'vercelKV' }
+        : { driver: 'fs', base: './.data' }
     }
   },
 

@@ -32,6 +32,19 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Deploying to Vercel
+
+The app stores data (sessions, assignments, progress, notes) in **Nitro
+storage**: local `.data/` files in dev, and **Vercel KV** in production when
+the KV environment variables are present.
+
+1. In your Vercel project, go to **Storage** and create a **Vercel KV** store
+   (or install the Upstash Redis integration from the Vercel Marketplace) and
+   connect it to the project — this sets `KV_REST_API_URL` and
+   `KV_REST_API_TOKEN` automatically.
+2. Redeploy. Without those env vars the app keeps the local file storage,
+   which is read-only on Vercel and makes sign-in fail with a 500.
+
 ## Scripts
 
 | Command             | Description                     |
