@@ -58,6 +58,14 @@ interface NotepadStyle {
   color?: string
 }
 
+function ownCssColor(el: HTMLElement, property: 'backgroundColor' | 'color'): string | undefined {
+  const value = el.style[property]
+  if (!value || value === 'transparent' || value === 'inherit' || value === 'initial' || value === 'rgba(0, 0, 0, 0)') {
+    return undefined
+  }
+  return value
+}
+
 export function collectNotepadRuns(root: Node): NotepadRun[] {
   const runs: NotepadRun[] = []
   const walk = (node: Node, style: NotepadStyle) => {
@@ -85,8 +93,8 @@ export function collectNotepadRuns(root: Node): NotepadRun[] {
         italic: style.italic || el.tagName === 'EM' || el.tagName === 'I',
         underline: style.underline || el.tagName === 'U',
         strike: style.strike || el.tagName === 'S' || el.tagName === 'STRIKE' || el.tagName === 'DEL',
-        background: el.style.backgroundColor || style.background,
-        color: el.style.color || style.color
+        background: ownCssColor(el, 'backgroundColor') || style.background,
+        color: ownCssColor(el, 'color') || style.color
       })
     }
   }
@@ -153,6 +161,29 @@ function toRoman(value: number) {
   return result
 }
 
+function parseCssColor(value?: string): [number, number, number] | null {
+  if (!value) {
+    return null
+  }
+  const raw = value.trim().toLowerCase()
+  if (!raw || raw === 'transparent' || raw === 'inherit' || raw === 'initial' || raw === 'rgba(0, 0, 0, 0)' || raw === 'rgba(0,0,0,0)') {
+    return null
+  }
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(raw)
+  if (hex) {
+    let h = hex[1]!
+    if (h.length === 3) {
+      h = h[0]! + h[0] + h[1] + h[1] + h[2] + h[2]
+    }
+    return [Number.parseInt(h.slice(0, 2), 16), Number.parseInt(h.slice(2, 4), 16), Number.parseInt(h.slice(4, 6), 16)]
+  }
+  const channels = raw.match(/rgba?\(([^)]+)\)/)?.[1]?.split(/[\s,/]+/).map(Number).filter(n => Number.isFinite(n)) ?? []
+  if (channels.length >= 3) {
+    return [channels[0]!, channels[1]!, channels[2]!]
+  }
+  return null
+}
+
 function orderedLabel(index: number, depth: number) {
   const style = depth % 3
   if (style === 1) {
@@ -171,10 +202,12 @@ export async function exportQuestionsPdf(html: string) {
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
   const fontSize = 11
-  const lineHeight = fontSize * 1.2
+  const pt = 1 / doc.internal.scaleFactor
+  const em = fontSize * pt
+  const lineHeight = em * 1.35
   const indentPerLevel = 12
-  const checkboxSize = 5
-  const checkboxGap = 3
+  const checkboxSize = em * 0.95
+  const checkboxGap = em * 0.35
 
   doc.setFontSize(14)
   doc.setFont('helvetica', 'bold')
@@ -188,10 +221,6 @@ export async function exportQuestionsPdf(html: string) {
   const blocks = flattenNotepadBlocks(container)
 
   const fontKey = (run: NotepadRun) => run.bold && run.italic ? 'bolditalic' : run.bold ? 'bold' : run.italic ? 'italic' : 'normal'
-  const rgb = (value?: string): [number, number, number] | null => {
-    const channels = value?.match(/\d+/g)?.map(Number) ?? []
-    return channels.length === 3 ? [channels[0]!, channels[1]!, channels[2]!] : null
-  }
   const measure = (run: NotepadRun, text: string) => {
     doc.setFont('helvetica', fontKey(run))
     return doc.getTextWidth(text)
@@ -279,27 +308,31 @@ export async function exportQuestionsPdf(html: string) {
       if (line === lines[0] && checkbox) {
         doc.setDrawColor(60, 60, 60)
         doc.setFillColor(60, 60, 60)
-        doc.rect(margin + blockIndent, y - checkboxSize + 1, checkboxSize, checkboxSize, block.list === 'checked' ? 'FD' : 'S')
+        doc.rect(margin + blockIndent, y - em * 0.72, checkboxSize, checkboxSize, block.list === 'checked' ? 'FD' : 'S')
       }
       let x = textStartX
       for (const token of line) {
         const width = measure(token.run, token.text)
-        const bg = rgb(token.run.background)
-        if (bg) {
+        const bg = parseCssColor(token.run.background)
+        if (bg && token.text.trim()) {
+          const xPad = em * 0.05
+          const yPad = em * 0.1
+          const ascent = em * 0.72
+          const descent = em * 0.22
           doc.setFillColor(bg[0], bg[1], bg[2])
-          doc.rect(x, y - fontSize * 0.8, width, fontSize, 'F')
+          doc.rect(x - xPad, y - ascent - yPad, width + xPad * 2, ascent + descent + yPad * 2, 'F')
         }
-        const fg = rgb(token.run.color) ?? [30, 30, 30]
+        const fg = parseCssColor(token.run.color) ?? [30, 30, 30]
         doc.setTextColor(fg[0], fg[1], fg[2])
         doc.setFont('helvetica', fontKey(token.run))
         doc.text(token.text, x, y)
         if (token.run.underline || token.run.strike) {
           doc.setDrawColor(fg[0], fg[1], fg[2])
           if (token.run.underline) {
-            doc.line(x, y + 1.5, x + width, y + 1.5)
+            doc.line(x, y + em * 0.18, x + width, y + em * 0.18)
           }
           if (token.run.strike) {
-            doc.line(x, y - 1.2, x + width, y - 1.2)
+            doc.line(x, y - em * 0.28, x + width, y - em * 0.28)
           }
         }
         x += width

@@ -92,19 +92,18 @@ const donutSegments = computed(() => {
   })
 })
 const initials = computed(() => initialsOf(user.value?.name ?? ''))
-const outputDriveUrl = 'https://drive.google.com/drive/folders/1IZX0EruvEyfIXP_Z1zSx8hj2zIzhqq2D?usp=sharing'
 const memberOutputFolders = [
   { name: 'Adriane', email: 'adriane@blueframeph.com', url: 'https://drive.google.com/drive/folders/1_n1I5HM95_ts6YAIfSe56dU2LpugsMR8' },
   { name: 'Josh', email: 'joshua@blueframeph.com', url: 'https://drive.google.com/drive/folders/1QqIjEN3EaKOR78z4tvcvAvvUHU5-YwCD' },
   { name: 'Ivan', email: 'irubiales@leadsagri.com', url: 'https://drive.google.com/drive/folders/1WCtDCChxpMaH9pgCYjGY_zw81cgiZk4f' },
   { name: 'Jhon', email: 'jacampos@leadsagri.com', url: 'https://drive.google.com/drive/folders/1eW0VDhac1EcdIc3EhOYQfs6bopwlrQXq' }
 ]
-const viewOutputOpen = ref(false)
-const viewingSession = ref<BootcampSession | null>(null)
+const outputFolderOpen = ref(false)
+const outputSession = ref<BootcampSession | null>(null)
 
-function openViewOutput(session: BootcampSession) {
-  viewingSession.value = session
-  viewOutputOpen.value = true
+function openOutputFolder(session: BootcampSession) {
+  outputSession.value = session
+  outputFolderOpen.value = true
 }
 
 const { data: notepadData } = await useFetch<{ text: string }>('/api/notepad')
@@ -578,10 +577,8 @@ async function signOut() {
                         size="xs"
                         variant="subtle"
                         color="neutral"
-                        :to="outputDriveUrl"
-                        target="_blank"
-                        rel="noopener noreferrer"
                         :aria-label="`Upload output for ${session.title}`"
+                        @click="openOutputFolder(session)"
                       >
                         Upload
                       </UButton>
@@ -592,7 +589,7 @@ async function signOut() {
                         variant="subtle"
                         color="neutral"
                         :aria-label="`View output for ${session.title}`"
-                        @click="openViewOutput(session)"
+                        @click="openOutputFolder(session)"
                       >
                         View
                       </UButton>
@@ -695,9 +692,9 @@ async function signOut() {
     </main>
 
     <UModal
-      v-model:open="viewOutputOpen"
-      title="Select member folder"
-      :description="viewingSession ? `Session ${viewingSession.number}: ${viewingSession.title}` : 'Choose whose output folder to open.'"
+      v-model:open="outputFolderOpen"
+      :title="isMember ? 'Select folder to upload' : 'Select member folder'"
+      :description="outputSession ? `Session ${outputSession.number}: ${outputSession.title}` : 'Choose whose output folder to open.'"
       :ui="{ content: 'sm:max-w-sm' }"
     >
       <template #body>
@@ -713,8 +710,8 @@ async function signOut() {
               color="neutral"
               variant="ghost"
               class="w-full justify-start"
-              :aria-label="`View ${folder.name}'s output folder`"
-              @click="viewOutputOpen = false"
+              :aria-label="isMember ? `Upload to ${folder.name}'s folder` : `View ${folder.name}'s output folder`"
+              @click="outputFolderOpen = false"
             >
               <span class="grid size-7 shrink-0 place-items-center rounded-full bg-(--ui-primary) text-[10px] font-semibold text-(--ui-bg)">
                 {{ initialsOf(folder.name) }}

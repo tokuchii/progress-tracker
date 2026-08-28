@@ -6,9 +6,36 @@ const assignmentsKey = 'assignments'
 export async function registerUser(member: Member) {
   const storage = useStorage('data')
   const users = await storage.getItem<Member[]>(usersKey) ?? []
-  if (!users.some(user => user.email === member.email)) {
-    users.push(member)
+  const email = member.email.trim().toLowerCase()
+  const existing = users.find(user => user.email === email)
+  if (!existing) {
+    users.push({ name: member.name, email })
     await storage.setItem(usersKey, users)
+    return
+  }
+  if (existing.name !== member.name) {
+    existing.name = member.name
+    await storage.setItem(usersKey, users)
+  }
+}
+
+export async function syncAssignmentNames() {
+  const storage = useStorage('data')
+  const users = await storage.getItem<Member[]>(usersKey) ?? []
+  const byEmail = new Map(users.map(user => [user.email, user.name]))
+  const assignments = await storage.getItem<Record<string, Member[]>>(assignmentsKey) ?? {}
+  let changed = false
+  for (const members of Object.values(assignments)) {
+    for (const member of members) {
+      const name = byEmail.get(member.email)
+      if (name && member.name !== name) {
+        member.name = name
+        changed = true
+      }
+    }
+  }
+  if (changed) {
+    await storage.setItem(assignmentsKey, assignments)
   }
 }
 

@@ -1,5 +1,5 @@
 import type { Member } from '../../shared/sessions'
-import { registerUser, removeUsers } from '../utils/assignments'
+import { registerUser, removeUsers, syncAssignmentNames } from '../utils/assignments'
 import { ADMIN_EMAILS } from '../utils/admins'
 
 // Team members tracked in the bootcamp. Admin login accounts are not members.
@@ -15,4 +15,5 @@ export default defineNitroPlugin(async () => {
   for (const member of DEFAULT_MEMBERS) {
     await registerUser(member)
   }
+  await syncAssignmentNames()
 })
