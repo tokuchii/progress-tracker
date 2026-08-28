@@ -1,9 +1,9 @@
 import { findSession } from '../../../shared/sessions'
-import { requireSessionUser } from '../../utils/session'
+import { requireAdmin } from '../../utils/session'
 import { setCompleted } from '../../utils/progress'
 
 export default defineEventHandler(async (event) => {
-  const user = await requireSessionUser(event)
+  const user = await requireAdmin(event)
   const body = await readBody(event)
   const sessionId = typeof body?.sessionId === 'string' ? body.sessionId : ''
 

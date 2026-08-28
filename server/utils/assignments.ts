@@ -17,6 +17,11 @@ export async function listUsers(): Promise<Member[]> {
   return [...(users ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }))
 }
 
+export async function findUser(email: string): Promise<Member | undefined> {
+  const users = await useStorage('data').getItem<Member[]>(usersKey)
+  return (users ?? []).find(user => user.email === email)
+}
+
 export async function removeUsers(emails: string[]) {
   const storage = useStorage('data')
   const users = await storage.getItem<Member[]>(usersKey) ?? []

@@ -5,16 +5,22 @@ A Nuxt 4 + Nuxt UI application that tracks a partner's progress through the
 
 ## Flow
 
-1. Only **admin accounts** sign in: `kmacabos@leadsagri.com`,
+1. **Admin accounts** sign in: `kmacabos@leadsagri.com`,
    `marcelus@leadsagri.com`, `aaraza@leadsagri.com`, `rtaleon@leadsagri.com`.
-2. Enter your name and admin email on the sign-in page. Check
+2. **Member accounts** sign in with their registered member email
+   (`adriane@blueframeph.com`, `irubiales@leadsagri.com`,
+   `jacampos@leadsagri.com`, `joshua@blueframeph.com`). Members get a
+   read-only view: no summary card, no Done column, no member assignment,
+   no exports — they can only view the session tables and edit the
+   Asked Questions notepad.
+3. Enter your name and team email on the sign-in page. Check
    **Remember this device** to stay signed in for 30 days; otherwise the
    session ends when the browser closes.
-3. You land on the **dashboard**: overall progress
+4. Admins land on the **dashboard**: overall progress
    (team average derived from the member progress card), per-section session
    tables with XP, and completion checkboxes.
-4. Tick each session off as it's completed — progress is saved automatically.
-5. Team members appear in the assign list; assign them to sessions to track
+5. Tick each session off as it's completed — progress is saved automatically.
+6. Team members appear in the assign list; assign them to sessions to track
    who has completed each one.
 
 ## Stack

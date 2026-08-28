@@ -5,7 +5,7 @@ import { exportQuestionsPdf } from '~/utils/notepad'
 
 const { notify } = useNotify()
 
-const { data: progress, status } = await useFetch<{ user: { name: string, email: string } | null, completed: string[] }>('/api/progress')
+const { data: progress, status } = await useFetch<{ user: { name: string, email: string, role: 'admin' | 'member' } | null, completed: string[] }>('/api/progress')
 if (!progress.value?.user) {
   await navigateTo('/', { replace: true })
 }
@@ -38,6 +38,7 @@ onUnmounted(() => {
 })
 
 const user = computed(() => progress.value?.user)
+const isMember = computed(() => user.value?.role === 'member')
 const completed = reactive(new Set<string>(progress.value?.completed ?? []))
 
 const total = allSessions.length
@@ -91,6 +92,20 @@ const donutSegments = computed(() => {
   })
 })
 const initials = computed(() => initialsOf(user.value?.name ?? ''))
+const outputDriveUrl = 'https://drive.google.com/drive/folders/1IZX0EruvEyfIXP_Z1zSx8hj2zIzhqq2D?usp=sharing'
+const memberOutputFolders = [
+  { name: 'Adriane', email: 'adriane@blueframeph.com', url: 'https://drive.google.com/drive/folders/1_n1I5HM95_ts6YAIfSe56dU2LpugsMR8' },
+  { name: 'Josh', email: 'joshua@blueframeph.com', url: 'https://drive.google.com/drive/folders/1QqIjEN3EaKOR78z4tvcvAvvUHU5-YwCD' },
+  { name: 'Ivan', email: 'irubiales@leadsagri.com', url: 'https://drive.google.com/drive/folders/1WCtDCChxpMaH9pgCYjGY_zw81cgiZk4f' },
+  { name: 'Jhon', email: 'jacampos@leadsagri.com', url: 'https://drive.google.com/drive/folders/1eW0VDhac1EcdIc3EhOYQfs6bopwlrQXq' }
+]
+const viewOutputOpen = ref(false)
+const viewingSession = ref<BootcampSession | null>(null)
+
+function openViewOutput(session: BootcampSession) {
+  viewingSession.value = session
+  viewOutputOpen.value = true
+}
 
 const { data: notepadData } = await useFetch<{ text: string }>('/api/notepad')
 const notepadHtml = ref<string>(notepadData.value?.text ?? '')
@@ -269,10 +284,11 @@ async function signOut() {
 
       <div
         v-else
-        class="grid items-start gap-8 lg:grid-cols-[320px_1fr_320px]"
+        class="grid items-start gap-8"
+        :class="isMember ? 'lg:grid-cols-[1fr_320px]' : 'lg:grid-cols-[320px_1fr_320px]'"
       >
         <!-- Summary -->
-        <aside>
+        <aside v-if="!isMember">
           <div class="relative lg:sticky lg:top-24">
             <div class="pointer-events-none absolute -top-8 -right-8 size-48 rounded-full bg-(--ui-primary)/15 blur-3xl" />
             <UCard class="relative">
@@ -463,7 +479,16 @@ async function signOut() {
                     <th class="border-e border-(--ui-border) px-3 py-2 text-end font-semibold">
                       Members
                     </th>
-                    <th class="px-3 py-2 text-end font-semibold">
+                    <th
+                      class="px-3 py-2 text-end font-semibold"
+                      :class="!isMember ? 'border-e border-(--ui-border)' : ''"
+                    >
+                      Output
+                    </th>
+                    <th
+                      v-if="!isMember"
+                      class="px-3 py-2 text-end font-semibold"
+                    >
                       Done
                     </th>
                   </tr>
@@ -502,7 +527,10 @@ async function signOut() {
                             </span>
                           </UTooltip>
                         </div>
-                        <UPopover class="ms-2">
+                        <UPopover
+                          v-if="!isMember"
+                          class="ms-2"
+                        >
                           <UButton
                             icon="i-lucide-user-plus"
                             size="xs"
@@ -540,7 +568,39 @@ async function signOut() {
                         </UPopover>
                       </div>
                     </td>
-                    <td class="px-3 py-2.5 text-end">
+                    <td
+                      class="px-3 py-2.5 text-end"
+                      :class="!isMember ? 'border-e border-(--ui-border)' : ''"
+                    >
+                      <UButton
+                        v-if="isMember"
+                        icon="i-lucide-upload"
+                        size="xs"
+                        variant="subtle"
+                        color="neutral"
+                        :to="outputDriveUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        :aria-label="`Upload output for ${session.title}`"
+                      >
+                        Upload
+                      </UButton>
+                      <UButton
+                        v-else
+                        icon="i-lucide-eye"
+                        size="xs"
+                        variant="subtle"
+                        color="neutral"
+                        :aria-label="`View output for ${session.title}`"
+                        @click="openViewOutput(session)"
+                      >
+                        View
+                      </UButton>
+                    </td>
+                    <td
+                      v-if="!isMember"
+                      class="px-3 py-2.5 text-end"
+                    >
                       <UCheckbox
                         :model-value="isDone(session)"
                         :aria-label="`Mark ${session.title} as done`"
@@ -551,17 +611,30 @@ async function signOut() {
                 </tbody>
                 <tfoot>
                   <tr class="border-t border-(--ui-border) bg-(--ui-bg-elevated)/60 text-xs font-semibold text-(--ui-text-highlighted)">
-                    <td class="border-e border-(--ui-border) px-3 py-2">
+                    <td
+                      class="border-e border-(--ui-border) px-3 py-2"
+                      :colspan="isMember ? 2 : 1"
+                    >
                       Total
                     </td>
-                    <td class="border-e border-(--ui-border) px-3 py-2 font-medium text-(--ui-text-muted)">
+                    <td
+                      v-if="!isMember"
+                      class="border-e border-(--ui-border) px-3 py-2 font-medium text-(--ui-text-muted)"
+                    >
                       {{ sectionDone(section) }} of {{ section.sessions.length }} done
                     </td>
                     <td class="border-e border-(--ui-border) px-3 py-2 text-end tabular-nums">
                       {{ sectionXp(section) ? `${sectionXp(section)} XP` : '—' }}
                     </td>
                     <td class="border-e border-(--ui-border) px-3 py-2" />
-                    <td class="px-3 py-2" />
+                    <td
+                      class="px-3 py-2"
+                      :class="!isMember ? 'border-e border-(--ui-border)' : ''"
+                    />
+                    <td
+                      v-if="!isMember"
+                      class="px-3 py-2"
+                    />
                   </tr>
                 </tfoot>
               </table>
@@ -576,6 +649,7 @@ async function signOut() {
         <!-- Asked Questions   -->
         <aside class="lg:sticky lg:top-24">
           <UButton
+            v-if="!isMember"
             icon="i-lucide-file-down"
             size="xs"
             variant="subtle"
@@ -619,5 +693,40 @@ async function signOut() {
         </aside>
       </div>
     </main>
+
+    <UModal
+      v-model:open="viewOutputOpen"
+      title="Select member folder"
+      :description="viewingSession ? `Session ${viewingSession.number}: ${viewingSession.title}` : 'Choose whose output folder to open.'"
+      :ui="{ content: 'sm:max-w-sm' }"
+    >
+      <template #body>
+        <ul class="space-y-1">
+          <li
+            v-for="folder in memberOutputFolders"
+            :key="folder.url"
+          >
+            <UButton
+              :to="folder.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="neutral"
+              variant="ghost"
+              class="w-full justify-start"
+              :aria-label="`View ${folder.name}'s output folder`"
+              @click="viewOutputOpen = false"
+            >
+              <span class="grid size-7 shrink-0 place-items-center rounded-full bg-(--ui-primary) text-[10px] font-semibold text-(--ui-bg)">
+                {{ initialsOf(folder.name) }}
+              </span>
+              <span class="min-w-0 text-start">
+                <span class="block truncate text-sm font-medium">{{ folder.name }}</span>
+                <span class="block truncate text-xs text-(--ui-text-muted)">{{ folder.email }}</span>
+              </span>
+            </UButton>
+          </li>
+        </ul>
+      </template>
+    </UModal>
   </div>
 </template>

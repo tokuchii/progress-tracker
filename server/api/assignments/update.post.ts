@@ -1,9 +1,9 @@
 import { findSession, type Member } from '../../../shared/sessions'
-import { requireSessionUser } from '../../utils/session'
+import { requireAdmin } from '../../utils/session'
 import { listUsers, readAssignments, withCompletion } from '../../utils/assignments'
 
 export default defineEventHandler(async (event) => {
-  await requireSessionUser(event)
+  await requireAdmin(event)
 
   const body = await readBody(event)
   const sessionId = typeof body?.sessionId === 'string' ? body.sessionId : ''

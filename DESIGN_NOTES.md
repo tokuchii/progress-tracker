@@ -15,7 +15,9 @@ What to avoid repeating: inline JSON bodies through PowerShell→curl (quoting
 mangles them — use @file), and `v-else` directly after a `<template #slot v-if>`
 in Vue (must move the condition inside the slot).
 
-Auth: name + email sign-in (admin emails only, no password) with a
-"remember this device" option — 30-day cookie when checked, browser-session
-cookie otherwise. Notifications use an iPhone-style top banner (glass blur,
-spring slide-down, auto-dismiss).
+Auth: name + email sign-in (admin or registered member email, no password) with
+a "remember this device" option — 30-day cookie when checked, browser-session
+cookie otherwise. Members get a read-only dashboard (no summary card, no Done
+column, no assignments, no exports) and can only edit the Asked Questions
+notepad. Notifications use an iPhone-style top banner (glass blur, spring
+slide-down, auto-dismiss).

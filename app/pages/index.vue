@@ -124,7 +124,7 @@ async function signIn() {
             Welcome to the Bootcamp
           </h2>
           <p class="mt-1 text-sm text-(--ui-text-muted)">
-            Enter your name and admin email to continue.
+            Enter your name and team email to continue.
           </p>
 
           <form
